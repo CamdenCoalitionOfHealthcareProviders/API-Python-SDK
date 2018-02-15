@@ -26,22 +26,24 @@ class trackvia:
 				'username' : username,
 				'password' : password}
 
-		#Actually do the login and parse the token from the response.
-		resp,body=self.__json_request("{0}/oauth/token".format(self.base_url),post=values)
+		if values['username'] is not None and values['password'] is not None:
+			#Actually do the login and parse the token from the response.
+			resp,body=self.__json_request("{0}/oauth/token".format(self.base_url),post=values)
 
-		self.token=body['value']
-		self.refreshToken=body['refreshToken']
-		self.expiresIn=body['expires_in']
+			self.token=body['value']
+			self.refreshToken=body['refreshToken']
+			self.expiresIn=body['expires_in']
 
-		#Get the account ID that we are dealing with here
-		get_values= {'access_token' : self.token}
-		resp,body=self.__json_request("{0}/users".format(self.base_url), type="GET", get=get_values)
-		self.account_id=body['accounts'][0]['id']
+			#Get the account ID that we are dealing with here
+			get_values= {'access_token' : self.token}
+			resp,body=self.__json_request("{0}/users".format(self.base_url), type="GET", get=get_values)
+			self.account_id=body['accounts'][0]['id']
 
-		#Schedule a oauth_token refresh 15s before it expires
-		self.thread=threading.Timer(self.expiresIn-15, self.__refresh_token)
-		self.thread.daemon = True
-		self.thread.start()
+		if self.expiresIn is not None and self.refreshToken is not None:
+			#Schedule a oauth_token refresh 15s before it expires
+			self.thread=threading.Timer(self.expiresIn-15, self.__refresh_token)
+			self.thread.daemon = True
+			self.thread.start()
 
 	# This is a helper class to make requests to the trackvia API
 	def __json_request(self,url,type="POST",post=None,get=None,content_type="urlencode"):
