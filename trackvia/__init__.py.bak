@@ -1,5 +1,5 @@
 #/usr/bin/python
-import urllib.request, urllib.parse, urllib.error
+import urllib
 import httplib2
 import requests
 import json
@@ -26,24 +26,22 @@ class trackvia:
 				'username' : username,
 				'password' : password}
 
-		if values['username'] is not None and values['password'] is not None:
-			#Actually do the login and parse the token from the response.
-			resp,body=self.__json_request("{0}/oauth/token".format(self.base_url),post=values)
+		#Actually do the login and parse the token from the response.
+		resp,body=self.__json_request("{0}/oauth/token".format(self.base_url),post=values)
 
-			self.token=body['value']
-			self.refreshToken=body['refreshToken']
-			self.expiresIn=body['expires_in']
+		self.token=body['value']
+		self.refreshToken=body['refreshToken']
+		self.expiresIn=body['expires_in']
 
-			#Get the account ID that we are dealing with here
-			get_values= {'access_token' : self.token}
-			resp,body=self.__json_request("{0}/users".format(self.base_url), type="GET", get=get_values)
-			self.account_id=body['accounts'][0]['id']
+		#Get the account ID that we are dealing with here
+		get_values= {'access_token' : self.token}
+		resp,body=self.__json_request("{0}/users".format(self.base_url), type="GET", get=get_values)
+		self.account_id=body['accounts'][0]['id']
 
-		if self.expiresIn is not None and self.refreshToken is not None:
-			#Schedule a oauth_token refresh 15s before it expires
-			self.thread=threading.Timer(self.expiresIn-15, self.__refresh_token)
-			self.thread.daemon = True
-			self.thread.start()
+		#Schedule a oauth_token refresh 15s before it expires
+		self.thread=threading.Timer(self.expiresIn-15, self.__refresh_token)
+		self.thread.daemon = True
+		self.thread.start()
 
 	# This is a helper class to make requests to the trackvia API
 	def __json_request(self,url,type="POST",post=None,get=None,content_type="urlencode"):
@@ -52,7 +50,7 @@ class trackvia:
 			post_data=None
 		else:
 			try:
-				post_data = urllib.parse.urlencode(post)
+				post_data = urllib.urlencode(post)
 			except:
 				post_data=post
 
@@ -61,8 +59,8 @@ class trackvia:
 			get_data=""
 		else:
 			get_list=[]
-			for element in list(get.keys()):
-				get_list.append(urllib.parse.quote_plus(element)+"="+urllib.parse.quote_plus(str(get[element])))
+			for element in get.keys():
+				get_list.append(urllib.quote_plus(element)+"="+urllib.quote_plus(str(get[element])))
 			get_data="?"+'&'.join(get_list)
 
 		if content_type=="json":
@@ -244,7 +242,7 @@ class trackvia:
 
 	def __signal_handler(self, signal, frame):
 		"""Internal method for handling signals."""
-		print(("Caught Signal: {0}".format(signal) ))
+		print("Caught Signal: {0}".format(signal) )
 		self.stop()
 		sys.exit(0)
 
