@@ -25,10 +25,12 @@ class trackvia:
 		self.apikey=apikey
 
 		#Login information
-		values = { 'grant_type' : 'password',
-				'client_id' : 'TrackViaAPI',
-				'username' : username,
-				'password' : password}
+		values = { 
+			'grant_type' : 'password',
+			'client_id' : 'TrackViaAPI',
+			'username' : username,
+			'password' : password
+		}
 
 		if values['username'] is not None and values['password'] is not None:
 			#Actually do the login and parse the token from the response.
@@ -78,7 +80,7 @@ class trackvia:
 
 		try:
 			body=json.loads(resp.content)
-		except ValueError as e:
+		except ValueError:
 			body=resp.content
 
 		return resp, body
