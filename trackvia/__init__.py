@@ -1,6 +1,10 @@
 #/usr/bin/python
-import urllib
-import httplib2
+
+try: # Python 2.X
+	from urllib import quote_plus 
+	from urllib import urlencode
+except ImportError: # Python 3+
+	from urllib.parse import quote_plus, urlencode 
 import requests
 import json
 import sys
@@ -52,7 +56,7 @@ class trackvia:
 			post_data=None
 		else:
 			try:
-				post_data = urllib.urlencode(post)
+				post_data = urlencode(post)
 			except:
 				post_data=post
 
@@ -62,7 +66,7 @@ class trackvia:
 		else:
 			get_list=[]
 			for element in get.keys():
-				get_list.append(urllib.quote_plus(element)+"="+urllib.quote_plus(str(get[element])))
+				get_list.append(quote_plus(element)+"="+quote_plus(str(get[element])))
 			get_data="?"+'&'.join(get_list)
 
 		if content_type=="json":
@@ -70,15 +74,14 @@ class trackvia:
 		else:
 			headers={'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
 
-		h = httplib2.Http()
-		response, content = h.request(url+get_data,type,headers=headers,body=post_data)
+		resp = requests.request(type, url+get_data, headers=headers, params=post_data)
 
 		try:
-			body=json.loads(content)
+			body=json.loads(resp.content)
 		except ValueError as e:
-			body=content
+			body=resp.content
 
-		return response,body
+		return resp, body
 
 	# It is much cleaner to upload multipart files using the Requests framework.
 	def __post_file(self, url, data, file):
@@ -211,15 +214,6 @@ class trackvia:
 				"viewId" : viewId }
 		resp,body=self.__json_request("{0}/openapi/views/{1}/records/{2}".format(self.base_url, viewId, recordId),type='PUT', post=json.dumps(post_data), get=get_values, content_type="json")
 
-		return resp,body
-
-	def delete_record(self, viewId, recordId):
-		"""Deletes a record from a view"""
-		get_values={"access_token" : self.token,
-				"user_key" : self.apikey,
-				"viewId" : viewId,
-				"recordId" : recordId }
-		resp,body=self.__json_request("{0}/openapi/views/{1}/records/{2}".format(self.base_url, viewId, recordId),type="DELETE",get=get_values)
 		return resp,body
 
 	def get_users(self,start=0,max=50):
